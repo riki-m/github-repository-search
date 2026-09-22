@@ -1,0 +1,25 @@
+<header class="site-header">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true">⌘</span> repo<span class="brand-light">finder</span
+    ><span class="brand-label">GITHUB EXPLORER</span>
+  </div>
+  @if (auth.session(); as session) {
+    <div class="account">
+      <span class="account-dot"></span><span>{{ session.username }}</span
+      ><button mat-button (click)="signOut()">Sign out</button>
+    </div>
+  } @else {
+    <span class="header-note">A little curiosity goes a long way.</span>
+  }
+</header>
+<main>
+  @if (error()) {
+    <p class="error" role="alert">{{ error() }}</p>
+  }
+  @if (auth.session()) {
+    <app-explorer />
+  } @else {
+    <app-login />
+  }
+</main>
+<footer><span>Built for discovery.</span><span>Powered by the GitHub API</span></footer>

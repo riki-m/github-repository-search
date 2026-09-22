@@ -1,0 +1,17 @@
+@host = http://127.0.0.1:5080
+
+### Sign in; copy the returned token to the variable below.
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{"username":"demo1","password":"Demo1!Pass"}
+
+### Never commit a real access token.
+@token = REPLACE_WITH_LOGIN_TOKEN
+
+GET {{host}}/api/repositories?q=angular
+Authorization: Bearer {{token}}
+
+### Read the full saved objects.
+GET {{host}}/api/bookmarks
+Authorization: Bearer {{token}}
