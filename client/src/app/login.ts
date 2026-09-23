@@ -59,7 +59,10 @@ import { AuthService, errorMessage } from './auth.service';
       </button>
       <!-- Evaluation credentials are documented in README, not displayed on the sign-in screen. -->
       <p class="fine-print">
-        Bookmarks last for this session. A new sign-in starts a fresh collection.
+        <strong>Bookmarks are saved only for your current session.</strong>
+        Refreshing this browser tab keeps them while your session is still valid.
+        After signing out and signing in again, your bookmarks list starts empty,
+        even with the same account.
       </p>
     </form>
   </section>`,

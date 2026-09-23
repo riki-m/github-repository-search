@@ -44,7 +44,9 @@ These are intentionally public evaluation fixtures, not real credentials. They a
 
 ## First search
 
-Enter a repository keyword and press Enter or Search, then Bookmark a result. Refreshing the browser preserves the active session in the same tab.
+Enter a repository keyword and press Enter or Search, then Bookmark a result.
+
+**Bookmarks are saved only for your current session.** Refreshing the same browser tab keeps them while that session is still valid. After signing out and signing in again, your bookmarks list starts empty, even with the same account. Bookmarks are not stored permanently; session expiry or a server restart also ends access to them.
 
 ## Scope
 
