@@ -18,7 +18,7 @@ The current source includes bookmark snapshot race protection and deduplication,
 | Clean client dependency installation | Passed: 471 packages installed from the updated lockfile into an isolated copy |
 | Repaired API live smoke test | Temporary port 5081: login 200; real repo:angular/angular search 200 with one result; bookmark 204; bookmark list 200 with one item; logout 204 |
 | Whitespace validation | git diff --check passed (line-ending normalization notices only) |
-| Git publication | Not performed; no remote configured |
+| Git publication | Public repository created at https://github.com/riki-m/github-repository-search; origin configured. Upload pending Git Credential Manager authentication; no successful push verified yet. |
 
 The five new frontend cases cover both bookmark response orderings, valid-page recovery preserving scope, bounded repeated-shrink/empty-page behavior, and warning cleanup after login. Nine new backend cases cover malformed envelopes, 403 classification and rejection of a malformed repository page before any entries are remembered.
 

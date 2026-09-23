@@ -1,5 +1,7 @@
 # Repo Finder
 
+Repository: [riki-m/github-repository-search](https://github.com/riki-m/github-repository-search)
+
 A GitHub repository search application built with Angular 21, Angular Material and ASP.NET Core 10 controllers. Users sign in with a demo account, search via the backend and bookmark complete GitHub repository results in a custom server-side session.
 
 ## Run locally
