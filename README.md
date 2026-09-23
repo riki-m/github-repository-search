@@ -50,7 +50,18 @@ Enter a repository keyword and press Enter or Search, then Bookmark a result. Re
 
 Implemented: server-side GitHub search; button and Enter submission; repository gallery with name, owner avatar and Bookmark; JWT authentication; custom session storing the entire selected repository JSON object; clean separation of responsibilities and tests.
 
-The optional separate Bookmarks screen is not included in this version. The UI shows the bookmark count and saved state on search results. Search and bookmark responses contain only gallery fields; the complete original objects remain in the server session.
+The assignment bonus is implemented as a separate Bookmarks tab with full repository cards. Search results retain their Bookmarked state; the standalone bookmark counter has been removed from Search. Search and bookmark responses contain only gallery fields; the complete original objects remain in the server session.
+
+## Bookmarks tab (assignment bonus)
+
+Use **Search** to discover repositories and select **Bookmark**. Once the server accepts the save, the card is marked Bookmarked and appears in **Bookmarks** immediately. That tab shows the same owner/avatar, name/link, description, language, stars, forks and last-push information as the search card, with a saved marker instead of another save button. Its count belongs to the collection, not the search page.
+
+- Switching tabs preserves the search text (including unsent edits), submitted filters, results and page. Tab navigation does not request another GitHub search.
+- The collection distinguishes loading, a failed load with **Try again**, and an empty collection with **Explore repositories**. An error is never labelled as an empty collection.
+- Material tabs provide keyboard navigation: focus a tab, use Left/Right to move and Enter/Space to select. Returning from the empty state focuses Search.
+- Bookmarks use the existing authenticated `GET /api/bookmarks` and ID-only save endpoint. The workspace owns one bookmark collection, merges delayed snapshots with acknowledged saves and deduplicates by ID. It is destroyed on logout.
+- Refreshing the same browser tab during a valid session reloads saved repositories from the server. A new login starts a fresh collection, including a new login by the same username. Expiry or server restart also ends access. This bonus does not add permanent storage, registration, removal or additional sorting/filtering.
+- `repository-card.ts` supplies the shared presentation; `bookmarks.ts` renders collection states; `explorer.ts` owns navigation and session-local state, with its template in `explorer.html`. The server and full-JSON session storage are unchanged.
 
 ## Session behavior and decisions
 
@@ -82,7 +93,9 @@ client/src/app/
   auth.service.ts        Login state and scoped JWT interceptor
   repository.service.ts  API calls
   login.ts               Login form
-  explorer.ts            Search gallery and bookmark actions
+  explorer.ts/html       Search state, tabs and bookmark synchronization
+  bookmarks.ts           Collection loading/error/empty states
+  repository-card.ts     Shared repository card
 server/
   RepositorySearch.Api/
     Contracts/           Minimal gallery response models
@@ -135,7 +148,7 @@ Building tests does not update an already running API process. Restart it when r
 1. Sign in as demo1. Search using Enter and then the button.
 2. Bookmark a repository. Its button changes to Bookmarked.
 3. Refresh, repeat the search and confirm the saved state is retained.
-4. Sign out and sign in as demo2. Confirm its bookmark count starts at zero.
+4. Open Bookmarks and verify the full saved card. Switch back to Search and verify its state is preserved. Sign out and sign in as demo2; Bookmarks must show an empty collection.
 5. Try a wrong password, an empty search and a query with no matches.
 6. Restart the API. The previous token can no longer access the protected API; sign in again.
 7. Search for HILAN using the single search row: keyword, Sort results, Search. On the first search with more than 30 matches, dismiss the one-time guidance popup. Confirm it does not repeat on further searches or refresh in the same login. Move to Next and Previous: the page number, result range and repositories change together.

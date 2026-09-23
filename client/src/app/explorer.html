@@ -1,0 +1,135 @@
+<!-- Preserve the search panel and its form while switching tabs; tab selection sends no requests. -->
+<mat-tab-group
+  class="workspace-tabs"
+  [selectedIndex]="activeTab()"
+  (selectedIndexChange)="activeTab.set($event)"
+  [preserveContent]="true"
+  animationDuration="0ms"
+>
+  <mat-tab label="Search">
+    <div class="tab-content">
+      <section class="explore-heading">
+        <span class="eyebrow">DISCOVER OPEN SOURCE</span>
+        <h1>Find your next<br /><span>great repository.</span></h1>
+        <p class="muted">Search GitHub. Save what matters. Keep exploring.</p>
+      </section>
+      <form class="search-form" (ngSubmit)="search()">
+        <mat-form-field class="query-field" appearance="outline" subscriptSizing="dynamic">
+          <mat-label>Search repositories</mat-label>
+          <input
+            matInput
+            name="query"
+            [(ngModel)]="query"
+            maxlength="200"
+            placeholder="e.g. angular, dotnet, machine learning"
+            autocomplete="off"
+          />
+        </mat-form-field>
+        <mat-form-field class="ranking-field" appearance="outline" subscriptSizing="dynamic">
+          <mat-label>Sort results</mat-label>
+          <select matNativeControl name="ranking" [(ngModel)]="ranking">
+            @for (mode of rankingModes; track mode.value) {
+              <option [value]="mode.value">{{ mode.label }}</option>
+            }
+          </select>
+        </mat-form-field>
+        <button mat-flat-button type="submit" [disabled]="!query.trim() || loading()">
+          Search ↗
+        </button>
+        <label class="name-only-option">
+          <input type="checkbox" name="nameOnly" [(ngModel)]="nameOnly" />
+          Repository name only
+        </label>
+      </form>
+      <div class="results-bar">
+        <h2>Search results</h2>
+      </div>
+      @if (loading()) {
+        <mat-progress-bar mode="indeterminate" aria-label="Searching GitHub" />
+      }
+      @if (error()) {
+        <p class="error" role="alert">{{ error() }}</p>
+      }
+      @if (searched() && !loading()) {
+        <p class="result-summary" role="status">
+          Showing {{ results().length ? (page() - 1) * 30 + 1 : 0 }}–{{
+            results().length ? (page() - 1) * 30 + results().length : 0
+          }}
+          of {{ total() | number }} results for “{{ submittedQuery() }}” ·
+          {{ rankingLabel(submittedRanking()) }}
+          @if (submittedNameOnly()) {
+            · Name only
+          }
+        </p>
+        @if (total() > 1000 && !auth.searchHelpSeen()) {
+          <p class="muted">First 1,000 matches available.</p>
+        }
+        @if (incomplete()) {
+          <p class="muted">Partial results returned.</p>
+        }
+      }
+      @if (searched() && pageCount() > 1) {
+        <nav class="pagination" aria-label="Search result pages">
+          <button mat-stroked-button [disabled]="loading() || page() === 1" (click)="goToPage(1)">
+            First
+          </button>
+          <button
+            mat-stroked-button
+            [disabled]="loading() || page() === 1"
+            (click)="goToPage(page() - 1)"
+          >
+            Previous
+          </button>
+          <span aria-live="polite">Page {{ page() }} of {{ pageCount() }}</span>
+          <button
+            mat-stroked-button
+            [disabled]="loading() || page() >= pageCount()"
+            (click)="goToPage(page() + 1)"
+          >
+            Next
+          </button>
+          <button
+            mat-stroked-button
+            [disabled]="loading() || page() >= pageCount()"
+            (click)="goToPage(pageCount())"
+          >
+            Last
+          </button>
+        </nav>
+      }
+      @if (!searched() && !loading()) {
+        <div class="empty-state">
+          <span class="empty-icon" aria-hidden="true">⌕</span>
+          <h2>A world of code awaits</h2>
+          <p>Enter a keyword above to discover your next project.</p>
+        </div>
+      } @else if (searched() && results().length === 0 && !loading() && !error()) {
+        <div class="empty-state">
+          <h2>No repositories found</h2>
+          <p>Try another keyword or Default.</p>
+        </div>
+      }
+      <div class="repository-grid">
+        @for (repo of results(); track repo.id) {
+          <app-repository-card
+            [repo]="repo"
+            [saved]="savedIds().has(repo.id)"
+            [saving]="saving().has(repo.id)"
+            (save)="bookmark($event)"
+          />
+        }
+      </div>
+    </div>
+  </mat-tab>
+  <mat-tab label="Bookmarks">
+    <ng-template matTabContent>
+      <app-bookmarks
+        [items]="bookmarks()"
+        [loading]="bookmarksLoading()"
+        [error]="bookmarksError()"
+        (retry)="loadBookmarks()"
+        (browse)="showSearch()"
+      />
+    </ng-template>
+  </mat-tab>
+</mat-tab-group>

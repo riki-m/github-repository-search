@@ -393,3 +393,51 @@ footer {
     font-size: 11px;
   }
 }
+
+.workspace-tabs {
+  --mat-tab-header-active-label-text-color: var(--accent);
+}
+.tab-content {
+  padding: 28px 2px 4px;
+}
+.collection-heading {
+  margin: 10px 0 32px;
+}
+.collection-heading h1 {
+  font-size: clamp(32px, 4vw, 48px);
+}
+.collection-count {
+  border-radius: 24px;
+  background: #e4f0ed;
+  color: #145e54;
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.collection-empty {
+  background: white;
+  border: 1px dashed #cbdadf;
+  border-radius: 18px;
+  margin-top: 24px;
+}
+.collection-empty p {
+  max-width: 380px;
+  margin: 0 auto 24px;
+  line-height: 1.7;
+}
+.collection-error {
+  padding-top: 12px;
+}
+.saved-marker {
+  color: #145e54;
+  background: #edf6f2;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 13px;
+  text-align: center;
+}
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}

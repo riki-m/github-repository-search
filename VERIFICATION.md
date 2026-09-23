@@ -1,5 +1,20 @@
 # Verification
 
+## Bookmarks bonus — 2026-09-23
+
+Implemented the separate Search/Bookmarks tabs and shared full repository cards. Removed the standalone search counter. No server source, storage contract or dependency manifest changed. These checks cover the bonus implementation; the earlier publication evidence below refers to the previously published baseline.
+
+- All 25 frontend tests passed in sequential file runs: Explorer 18, App 4, Auth 1, SearchHelp 2. New cases cover collection loading/error/retry/empty states, saved-card content and acknowledgement, preserved page/scope/pending input without new requests, failed saves and workspace reload/reset. Existing race, paging, popup and authentication regressions remain passing.
+- Initial unconstrained test attempts failed with system memory allocation errors; successful runs used process-local NG_BUILD_MAX_WORKERS=1 and NODE_OPTIONS="--max-semi-space-size=1 --max-old-space-size=256". No system settings or other applications were changed.
+- Production build passed: 548.79 kB initial raw / 121.66 kB estimated transfer. Material tabs increased the bundle above the existing 500 kB warning budget by 48.79 kB; the budget was not raised. This is a size measurement, not a latency benchmark.
+- Live browser, a separate demo1 login: empty Bookmarks state and Explore repositories focus restoration; real repo:angular/angular search; acknowledged save; full saved card without a save button; keyboard Left + Enter back to Search with the same query/result and Bookmarked state; same-tab refresh restored the saved card from the server.
+- A new demo2 login showed zero saved items and the empty state, with none of demo1's saved data. Existing user tabs/sessions and the running API were not reset. Only the newly created test sessions were signed out.
+- Desktop and 390-pixel viewport inspected for Search and Bookmarks. Collection width measured 390 pixels at a 390-pixel viewport, with no horizontal overflow. Viewport restored. This is a focused keyboard/responsive check, not a full accessibility audit.
+- Error/retry and response-order scenarios were verified through Angular HTTP component tests, not by disrupting the live server. Backend tests were not rerun because the server was unchanged.
+
+Earlier sections below retain evidence from their respective changes; their test counts and bundle sizes predate this bonus.
+
+
 ## Sign-in presentation follow-up — 2026-09-23
 
 Removed the demo account panel and demo wording from the sign-in screen, and removed its unused CSS. Evaluation credentials and the rationale linking JWT identities to custom sessions are now documented in README, explicitly as public fixtures rather than encrypted secrets. Authentication, registration scope and storage behavior did not change.

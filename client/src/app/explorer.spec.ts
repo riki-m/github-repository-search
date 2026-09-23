@@ -5,6 +5,9 @@ import { Explorer } from './explorer';
 import { AuthService } from './auth.service';
 import { MatDialog } from '@angular/material/dialog';
 import { vi } from 'vitest';
+import { By } from '@angular/platform-browser';
+import { Bookmarks } from './bookmarks';
+import { Repository } from './models';
 
 describe('Explorer', () => {
   let http: HttpTestingController;
@@ -327,5 +330,96 @@ describe('Explorer', () => {
     initial.flush([repo]);
     save.flush(null);
     expect(fixture.componentInstance.bookmarks().length).toBe(1);
+  });
+  const example: Repository = {
+    id: 42,
+    name: 'example',
+    full_name: 'owner/example',
+    html_url: 'https://github.com/owner/example',
+    description: 'Useful repository',
+    language: 'TypeScript',
+    stargazers_count: 12,
+    forks_count: 3,
+    owner: { login: 'owner', avatar_url: 'https://example.com/avatar.png' },
+  };
+  async function openBookmarks(fixture: ReturnType<typeof setup>) {
+    fixture.componentInstance.activeTab.set(1);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    return fixture.debugElement.query(By.directive(Bookmarks));
+  }
+  it('distinguishes bookmark loading, error and empty states and supports retry', async () => {
+    const fixture = TestBed.createComponent(Explorer);
+    fixture.detectChanges();
+    const request = http.expectOne('/api/bookmarks');
+    let panel = await openBookmarks(fixture);
+    expect(panel.nativeElement.textContent).toContain('Loading your collection');
+    expect(panel.nativeElement.textContent).not.toContain('Your collection starts here');
+    request.flush({ detail: 'Unavailable' }, { status: 502, statusText: 'Bad Gateway' });
+    fixture.detectChanges();
+    expect(panel.nativeElement.textContent).toContain('Could not load your collection');
+    expect(panel.nativeElement.textContent).not.toContain('Your collection starts here');
+    panel.nativeElement.querySelector('button').click();
+    fixture.detectChanges();
+    http.expectOne('/api/bookmarks').flush([]);
+    fixture.detectChanges();
+    expect(panel.nativeElement.textContent).toContain('Your collection starts here');
+    panel.nativeElement.querySelector('button').click();
+    fixture.detectChanges();
+    expect(fixture.componentInstance.activeTab()).toBe(0);
+  });
+  it('shows complete saved cards only after acknowledgement and preserves search across tabs', async () => {
+    const fixture = setup();
+    const c = fixture.componentInstance;
+    c.query = 'example';
+    c.nameOnly = true;
+    c.search();
+    http
+      .expectOne('/api/repositories?q=example&page=1&ranking=best-match&nameOnly=true')
+      .flush({ items: [example], totalCount: 60, incompleteResults: false });
+    c.goToPage(2);
+    http
+      .expectOne('/api/repositories?q=example&page=2&ranking=best-match&nameOnly=true')
+      .flush({ items: [example], totalCount: 60, incompleteResults: false });
+    c.query = 'pending edit';
+    c.bookmark(example);
+    const save = http.expectOne('/api/bookmarks/42');
+    const panel = await openBookmarks(fixture);
+    expect(panel.nativeElement.querySelectorAll('.repository-card').length).toBe(0);
+    save.flush(null);
+    fixture.detectChanges();
+    expect(panel.nativeElement.querySelectorAll('.repository-card').length).toBe(1);
+    expect(panel.nativeElement.textContent).toContain('Useful repository');
+    expect(panel.nativeElement.textContent).toContain('12 stars');
+    expect(panel.nativeElement.querySelector('a').href).toBe(example.html_url);
+    expect(panel.nativeElement.querySelector('img').alt).toBe('owner avatar');
+    expect(panel.nativeElement.querySelectorAll('.repository-card button').length).toBe(0);
+    c.showSearch();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(c.query).toBe('pending edit');
+    expect(c.page()).toBe(2);
+    expect(c.submittedQuery()).toBe('example');
+    expect(c.submittedNameOnly()).toBe(true);
+    expect(c.results()).toEqual([example]);
+    http.expectNone((r) => r.url === '/api/repositories' || r.url === '/api/bookmarks');
+  });
+  it('keeps failed saves out of the collection and restores saved cards on a new workspace load', async () => {
+    let fixture = setup();
+    fixture.componentInstance.bookmark(example);
+    http.expectOne('/api/bookmarks/42').flush({}, { status: 500, statusText: 'Error' });
+    let panel = await openBookmarks(fixture);
+    expect(panel.nativeElement.querySelectorAll('.repository-card').length).toBe(0);
+    fixture.destroy();
+    fixture = TestBed.createComponent(Explorer);
+    fixture.detectChanges();
+    http.expectOne('/api/bookmarks').flush([example]);
+    panel = await openBookmarks(fixture);
+    expect(panel.nativeElement.querySelectorAll('.repository-card').length).toBe(1);
+    fixture.destroy();
+    fixture = setup();
+    panel = await openBookmarks(fixture);
+    expect(panel.nativeElement.querySelectorAll('.repository-card').length).toBe(0);
   });
 });

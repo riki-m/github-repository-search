@@ -1,5 +1,5 @@
-import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
-import { DatePipe, DecimalPipe } from '@angular/common';
+import { Component, OnInit, OnDestroy, inject, signal, computed, viewChild } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -11,168 +11,24 @@ import { AuthService, errorMessage } from './auth.service';
 import { MatDialog } from '@angular/material/dialog';
 import { SearchHelp } from './search-help';
 import { Repository } from './models';
+import { MatTabsModule, MatTabGroup } from '@angular/material/tabs';
+import { RepositoryCard } from './repository-card';
+import { Bookmarks } from './bookmarks';
 
 @Component({
   selector: 'app-explorer',
   imports: [
+    MatTabsModule,
+    RepositoryCard,
+    Bookmarks,
     FormsModule,
     DecimalPipe,
-    DatePipe,
     MatButtonModule,
     MatFormFieldModule,
     MatInputModule,
     MatProgressBarModule,
   ],
-  template: ` <section class="explore-heading">
-      <span class="eyebrow">DISCOVER OPEN SOURCE</span>
-      <h1>Find your next<br /><span>great repository.</span></h1>
-      <p class="muted">Search GitHub. Save what matters. Keep exploring.</p>
-    </section>
-    <form class="search-form" (ngSubmit)="search()">
-      <mat-form-field class="query-field" appearance="outline" subscriptSizing="dynamic">
-        <mat-label>Search repositories</mat-label>
-        <input
-          matInput
-          name="query"
-          [(ngModel)]="query"
-          maxlength="200"
-          placeholder="e.g. angular, dotnet, machine learning"
-          autocomplete="off"
-        />
-      </mat-form-field>
-      <mat-form-field class="ranking-field" appearance="outline" subscriptSizing="dynamic">
-        <mat-label>Sort results</mat-label>
-        <select matNativeControl name="ranking" [(ngModel)]="ranking">
-          @for (mode of rankingModes; track mode.value) {
-            <option [value]="mode.value">{{ mode.label }}</option>
-          }
-        </select>
-      </mat-form-field>
-      <button mat-flat-button type="submit" [disabled]="!query.trim() || loading()">
-        Search ↗
-      </button>
-      <label class="name-only-option">
-        <input type="checkbox" name="nameOnly" [(ngModel)]="nameOnly" />
-        Repository name only
-      </label>
-    </form>
-    <div class="results-bar">
-      <h2>Search results</h2>
-      <span class="muted" aria-live="polite">{{ bookmarks().length }} bookmarked</span>
-    </div>
-    @if (loading()) {
-      <mat-progress-bar mode="indeterminate" aria-label="Searching GitHub" />
-    }
-    @if (error()) {
-      <p class="error" role="alert">{{ error() }}</p>
-    }
-    @if (searched() && !loading()) {
-      <p class="result-summary" role="status">
-        Showing {{ results().length ? (page() - 1) * 30 + 1 : 0 }}–{{
-          results().length ? (page() - 1) * 30 + results().length : 0
-        }}
-        of {{ total() | number }} results for “{{ submittedQuery() }}” ·
-        {{ rankingLabel(submittedRanking()) }}
-        @if (submittedNameOnly()) {
-          · Name only
-        }
-      </p>
-      @if (total() > 1000 && !auth.searchHelpSeen()) {
-        <p class="muted">First 1,000 matches available.</p>
-      }
-      @if (incomplete()) {
-        <p class="muted">Partial results returned.</p>
-      }
-    }
-    @if (searched() && pageCount() > 1) {
-      <nav class="pagination" aria-label="Search result pages">
-        <button mat-stroked-button [disabled]="loading() || page() === 1" (click)="goToPage(1)">
-          First
-        </button>
-        <button
-          mat-stroked-button
-          [disabled]="loading() || page() === 1"
-          (click)="goToPage(page() - 1)"
-        >
-          Previous
-        </button>
-        <span aria-live="polite">Page {{ page() }} of {{ pageCount() }}</span>
-        <button
-          mat-stroked-button
-          [disabled]="loading() || page() >= pageCount()"
-          (click)="goToPage(page() + 1)"
-        >
-          Next
-        </button>
-        <button
-          mat-stroked-button
-          [disabled]="loading() || page() >= pageCount()"
-          (click)="goToPage(pageCount())"
-        >
-          Last
-        </button>
-      </nav>
-    }
-    @if (!searched() && !loading()) {
-      <div class="empty-state">
-        <span class="empty-icon" aria-hidden="true">⌕</span>
-        <h2>A world of code awaits</h2>
-        <p>Enter a keyword above to discover your next project.</p>
-      </div>
-    } @else if (searched() && results().length === 0 && !loading() && !error()) {
-      <div class="empty-state">
-        <h2>No repositories found</h2>
-        <p>Try another keyword or Default.</p>
-      </div>
-    }
-    <div class="repository-grid">
-      @for (repo of results(); track repo.id) {
-        <article class="repository-card">
-          <div class="repo-top">
-            <img
-              [src]="repo.owner.avatar_url"
-              [alt]="repo.owner.login + ' avatar'"
-              width="42"
-              height="42"
-              loading="lazy"
-              referrerpolicy="no-referrer"
-            /><span>{{ repo.owner.login }}</span>
-          </div>
-          <h3>
-            <a [href]="repo.html_url" target="_blank" rel="noopener noreferrer"
-              >{{ repo.name }} <span aria-hidden="true">↗</span></a
-            >
-          </h3>
-          <p class="repo-description">{{ repo.description || 'No description provided.' }}</p>
-          <div class="repo-meta">
-            <span><span class="language-dot"></span>{{ repo.language || 'Repository' }}</span
-            ><span>☆ {{ repo.stargazers_count | number }} stars</span>
-            <span>{{ repo.forks_count ?? 0 | number }} forks</span>
-          </div>
-          <p class="muted">
-            Last push:
-            {{ repo.pushed_at ? (repo.pushed_at | date: 'mediumDate' : 'UTC') : 'Not available' }}
-            @if (repo.archived) {
-              <strong> · Archived</strong>
-            }
-          </p>
-          <button
-            mat-stroked-button
-            type="button"
-            [disabled]="savedIds().has(repo.id) || saving().has(repo.id)"
-            (click)="bookmark(repo)"
-          >
-            {{
-              savedIds().has(repo.id)
-                ? '✓ Bookmarked'
-                : saving().has(repo.id)
-                  ? 'Saving…'
-                  : '+ Bookmark'
-            }}
-          </button>
-        </article>
-      }
-    </div>`,
+  templateUrl: './explorer.html',
 })
 export class Explorer implements OnInit, OnDestroy {
   private readonly api = inject(RepositoryService);
@@ -180,6 +36,15 @@ export class Explorer implements OnInit, OnDestroy {
   private readonly dialog = inject(MatDialog);
   private readonly subscriptions = new Subscription();
   private searchSubscription?: Subscription;
+  readonly activeTab = signal(0);
+  private readonly tabs = viewChild(MatTabGroup);
+  readonly bookmarksLoading = signal(false);
+  readonly bookmarksError = signal('');
+  showSearch() {
+    this.activeTab.set(0);
+    // Restore keyboard focus to the tab, rather than a button in the panel being hidden.
+    this.tabs()?.focusTab(0);
+  }
   query = '';
   nameOnly = false;
   // Separate pending input from the scope that produced the displayed results.
@@ -198,6 +63,7 @@ export class Explorer implements OnInit, OnDestroy {
     return this.rankingModes.find((m) => m.value === mode)?.label ?? mode;
   }
   readonly results = signal<Repository[]>([]);
+  // Owned by this authenticated workspace; destroying it on logout drops all client bookmark state.
   readonly bookmarks = signal<Repository[]>([]);
   readonly savedIds = computed(() => new Set(this.bookmarks().map((r) => r.id)));
   readonly saving = signal(new Set<number>());
@@ -211,14 +77,25 @@ export class Explorer implements OnInit, OnDestroy {
   // GitHub search exposes at most 1,000 results, even when total_count is larger.
   readonly pageCount = computed(() => Math.ceil(Math.min(this.total(), 1000) / 30));
   ngOnInit() {
+    this.loadBookmarks();
+  }
+  loadBookmarks() {
+    if (this.bookmarksLoading()) return;
+    this.bookmarksLoading.set(true);
+    this.bookmarksError.set('');
     this.subscriptions.add(
       this.api.bookmarks().subscribe({
         // Preserve saves acknowledged while the initial snapshot was still loading.
-        next: (items) =>
+        next: (items) => {
           this.bookmarks.update((saved) => [
             ...new Map([...items, ...saved].map((repo) => [repo.id, repo])).values(),
-          ]),
-        error: (error) => this.error.set(errorMessage(error)),
+          ]);
+          this.bookmarksLoading.set(false);
+        },
+        error: (error) => {
+          this.bookmarksError.set(errorMessage(error));
+          this.bookmarksLoading.set(false);
+        },
       }),
     );
   }
