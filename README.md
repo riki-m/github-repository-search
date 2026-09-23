@@ -4,6 +4,14 @@ Repository: [riki-m/github-repository-search](https://github.com/riki-m/github-r
 
 A GitHub repository search application built with Angular 21, Angular Material and ASP.NET Core 10 controllers. Users sign in with a demo account, search via the backend and bookmark complete GitHub repository results in a custom server-side session.
 
+## Angular preview on GitHub Pages
+
+Public URL: https://riki-m.github.io/github-repository-search/
+
+This deployment publishes only the Angular frontend. The sign-in screen is available, but login, live search and bookmarks require the ASP.NET Core API, which is not hosted on GitHub Pages. No mock data or authentication bypass is enabled. Use the local setup below for the complete application.
+
+The `Deploy Angular to GitHub Pages` workflow builds the frontend with the repository base path and publishes only `client/dist/client/browser`. It runs on changes to `client/` or the workflow on `main`, and can also be started manually from Actions. Repository Settings → Pages must use **GitHub Actions** as its source. Local `npm start` behavior is unchanged.
+
 ## Run locally
 
 Prerequisites: .NET 10 SDK, Node.js 24 LTS (24.12.0 was used), npm and Internet access to GitHub and package registries.
