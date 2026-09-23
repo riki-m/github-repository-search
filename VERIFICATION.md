@@ -1,6 +1,15 @@
 # Verification
 
-## Current end-to-end QA — 2026-09-23
+## Final published source validation — 2026-09-23
+
+- Validated source revision: `0c77d89d11dffbe82026a63155506f81dc76f37e`, including QA fixes from `9ec5def`. The only intervening code/configuration change is explicit `rootDir: "./src"` in `client/tsconfig.app.json`.
+- Applied that setting to the existing isolated D: test copy. SHA-256 comparison found **zero differences** across all tracked client/server files against the current checkout.
+- Production build passed again: **550.16 kB raw / 122.10 kB estimated transfer**. Output names `main-QZC4GRD5.js` and `styles-G2LZKPBN.css` match the preceding clean-copy build. The existing 500 kB warning remains disclosed.
+- All **42 frontend tests passed again**, 5 files, 0 failures. No further application change was needed.
+- The previous **84 backend passes** and clean-copy browser flow remain the backend/runtime evidence; neither was rerun for this documentation follow-up because server code and application logic are unchanged.
+- This follow-up commit changes only QA_REPORT.md and VERIFICATION.md. The code is ready for assignment submission within the documented scope and limitations. GitHub publication is verified separately after the documentation push.
+
+## End-to-end QA baseline — 2026-09-23
 
 See [QA_REPORT.md](QA_REPORT.md) for the requirement matrix and release gates. The sections below this current summary are **historical evidence**, not claims about this exact revision.
 
@@ -13,7 +22,7 @@ See [QA_REPORT.md](QA_REPORT.md) for the requirement matrix and release gates. T
 - Responsive inspection: 390x844 and 1280x900; document scroll widths 375 and 1265 respectively, no horizontal overflow. Mobile search controls stack and result-cap text wraps. Missing avatar/optional data and escaped markup covered in component tests. This is basic visual/keyboard coverage, not an assistive-technology audit.
 - **Clean-copy gate passed:** with explicit approval, copied source files only to `D:\RepoFinder-QA-20260923` (no node_modules/bin/obj). Node 24.12.0, npm 11.6.2, .NET SDK 10.0.204. Fresh D-local npm/NuGet caches; `npm ci` installed 471 packages, `dotnet restore` succeeded. All 84 server and 42 client tests passed again in that copy. Production build passed: 550.16 kB raw / 122.10 kB estimated transfer, same warning budget. This is a clean source/dependency installation on the existing machine, not a fresh OS image. One PowerShell process stack-overflowed before test results; the sequential retry without a shell profile passed.
 - Clean-copy browser flow passed on isolated ports 5081/4201: login, Enter search `repo:riki-m/Hilan-Test`, bookmark card, refresh showing 1 saved, new same-account login showing 0 saved. Signed out and stopped only the test processes afterward. The test-only proxy/ports and installed artifacts are outside the real checkout and excluded from publication.
-- Scope check: a new, unrelated `client/tsconfig.app.json` edit appeared during final verification. It is preserved locally and excluded from this commit; the clean-copy tests used the HEAD version of that file. All other client/server source files matched the clean copy by SHA-256.
+- Initial scope check: the `client/tsconfig.app.json` edit was excluded from QA commit `9ec5def` and subsequently published separately in `0c77d89`. The final-revision validation above now covers it; the original clean-copy evidence below predates that configuration change.
 - Release gate: all material checks completed before commit preparation. Existing origin/main verified and fetched with zero divergence from the opening HEAD. The final response records the resulting commit/push verification; no force push or email.
 
 ## Historical checks
