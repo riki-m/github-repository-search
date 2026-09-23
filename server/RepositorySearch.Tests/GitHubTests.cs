@@ -69,6 +69,36 @@ public sealed class GitHubTests
         Assert.Equal(limited ? 429 : 502, error.StatusCode);
         Assert.DoesNotContain(body, error.Message);
     }
+    [Theory]
+    [InlineData("HILAN")]
+    [InlineData("hilan-test")]
+    [InlineData("  user authentication  ")]
+    [InlineData("שלום 世界 café 🚀")]
+    [InlineData("\"machine learning\" in:name user:riki-m")]
+    [InlineData("user & sort=stars # + % ?")]
+    public async Task Query_round_trips_without_injecting_parameters(string query)
+    {
+        var handler = new StubHandler(HttpStatusCode.OK, """{"total_count":0,"incomplete_results":false,"items":[]}""");
+        var service = new GitHubSearch(new HttpClient(handler) { BaseAddress = new("https://api.github.com/") });
+        await service.Search(query, default);
+        var parameters = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(handler.Uri!.Query);
+        Assert.Equal(query, parameters["q"]);
+        Assert.Equal(3, parameters.Count);
+    }
+    [Theory]
+    [InlineData(false, 502)]
+    [InlineData(true, 504)]
+    public async Task Network_failure_and_timeout_are_not_empty_successes(bool timeout, int expected)
+    {
+        var service = new GitHubSearch(new HttpClient(new FailingHandler(timeout)) { BaseAddress = new("https://api.github.com/") });
+        var error = await Assert.ThrowsAsync<GitHubException>(() => service.Search("test", default));
+        Assert.Equal(expected, error.StatusCode);
+    }
+    private sealed class FailingHandler(bool timeout) : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+            => throw (timeout ? new OperationCanceledException() : (Exception)new HttpRequestException());
+    }
     private sealed class StubHandler(HttpStatusCode status, string body) : HttpMessageHandler
     {
         public Uri? Uri { get; private set; }

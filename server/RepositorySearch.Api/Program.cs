@@ -32,6 +32,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
     };
     options.Events = new JwtBearerEvents
     {
+        // A signed JWT is insufficient after logout or when its user does not own the session.
         OnTokenValidated = context =>
         {
             var sessions = context.HttpContext.RequestServices.GetRequiredService<SessionStore>();

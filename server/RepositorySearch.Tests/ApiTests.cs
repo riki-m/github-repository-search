@@ -131,6 +131,46 @@ public sealed class ApiTests : IDisposable
         Assert.Equal(expected, ((FakeGitHub)factory.Services.GetRequiredService<IGitHubSearch>()).LastPage);
         Assert.Equal(HttpStatusCode.NoContent, (await client.PostAsync("/api/bookmarks/42", null)).StatusCode);
     }
+    [Theory]
+    [InlineData(0, 400)]
+    [InlineData(200, 200)]
+    [InlineData(201, 400)]
+    public async Task Query_length_boundaries_are_validated_before_search(int length, int expected)
+    {
+        using var client = await Login();
+        Assert.Equal(expected, (int)(await client.GetAsync("/api/repositories?q=" + new string('x', length))).StatusCode);
+        Assert.Equal(expected == 200 ? new string('x', length) : null, ((FakeGitHub)factory.Services.GetRequiredService<IGitHubSearch>()).LastQuery);
+    }
+    [Theory]
+    [InlineData(null, "password")]
+    [InlineData("demo1", null)]
+    [InlineData("", "password")]
+    public async Task Missing_login_fields_are_rejected(string? username, string? password)
+    {
+        using var client = factory.CreateClient();
+        Assert.Equal(HttpStatusCode.BadRequest, (await client.PostAsJsonAsync("/api/auth/login", new { username, password })).StatusCode);
+    }
+    [Theory]
+    [InlineData(65, 10)]
+    [InlineData(5, 129)]
+    public async Task Oversized_login_fields_are_rejected(int usernameLength, int passwordLength)
+    {
+        using var client = factory.CreateClient();
+        Assert.Equal(HttpStatusCode.BadRequest, (await client.PostAsJsonAsync("/api/auth/login", new { username = new string('a', usernameLength), password = new string('a', passwordLength) })).StatusCode);
+    }
+    [Fact]
+    public async Task Valid_signature_does_not_allow_another_users_session()
+    {
+        using var client = await Login();
+        var session = factory.Services.GetRequiredService<SessionStore>().Create("demo1");
+        var settings = factory.Services.GetRequiredService<TokenSettings>();
+        var token = new JwtSecurityToken(TokenSettings.Issuer, TokenSettings.Audience,
+            [new Claim("sub", "demo2"), new Claim("sid", session.Id)],
+            DateTime.UtcNow.AddMinutes(-1), DateTime.UtcNow.AddMinutes(30),
+            new SigningCredentials(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(settings.Key)), SecurityAlgorithms.HmacSha256));
+        client.DefaultRequestHeaders.Authorization = new("Bearer", new JwtSecurityTokenHandler().WriteToken(token));
+        Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/api/bookmarks")).StatusCode);
+    }
     // Each test gets a fresh limiter budget, matching a fresh application instance.
     private readonly ApiFactory factory = new();
     public void Dispose() => factory.Dispose();

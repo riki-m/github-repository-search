@@ -8,7 +8,6 @@ import { Explorer } from './explorer';
   selector: 'app-root',
   imports: [MatButtonModule, Login, Explorer],
   templateUrl: './app.html',
-  styleUrl: './app.scss',
 })
 export class App {
   readonly auth = inject(AuthService);

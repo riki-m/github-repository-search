@@ -46,7 +46,9 @@ export class AuthService {
       if (
         value &&
         typeof value.token === 'string' &&
+        value.token.trim().length > 0 &&
         typeof value.username === 'string' &&
+        value.username.trim().length > 0 &&
         Date.parse(value.expiresAt) > Date.now()
       )
         return value;

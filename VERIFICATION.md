@@ -1,5 +1,23 @@
 # Verification
 
+## Current end-to-end QA — 2026-09-23
+
+See [QA_REPORT.md](QA_REPORT.md) for the requirement matrix and release gates. The sections below this current summary are **historical evidence**, not claims about this exact revision.
+
+- Opening state: clean `main`, HEAD `5c10c931aeb295462e930329801d11cea4262b9c`, origin `https://github.com/riki-m/github-repository-search.git`; no pre-existing modified/untracked files.
+- Backend: **84 passed**, zero failed/skipped, isolated artifacts, live API left running. This includes 19 added cases for query encoding/boundaries, missing/oversized login fields, signed JWT with mismatched session owner, upstream timeout/network failure, concurrent bookmark capacity and cache eviction.
+- Client: **42/42 passed in the final full five-file run**. Explorer 27, App 4, Auth 8, SearchHelp 2, RepositoryCard 1. Initial new-test failures were corrected (Angular test interaction; C# fault-helper syntax); successful reruns are the evidence. No final failing tests remain.
+- Production build: passed; 550.16 kB initial raw, 122.01 kB estimated transfer. Existing 500 kB warning budget exceeded by 50.16 kB. Budget unchanged. No load/latency benchmark claim.
+- Live comparison: all six paired requests returned HTTP 200, matching totals, false incomplete_results, identical ordered IDs and all displayed card fields. Details in [identity evidence](live-search-identity.json) and [ranking evidence](live-search-ranking.json), UTC timestamps included. No personal GitHub token used.
+- Browser (existing local servers, separate test login): Enter search HILAN, popup with broad-scope hint and Escape dismissal, matching ordered gallery names; acknowledged bookmark, full card in Bookmarks, refresh restored it, keyboard Left/Enter changed tab; new same-account login showed zero bookmarks. USER name-only results retained the 1,000 cap after popup dismissal, Last showed range 991–1000 and disabled Next. The preserved hidden Bookmarks panel is not part of the visible Search result count.
+- Responsive inspection: 390x844 and 1280x900; document scroll widths 375 and 1265 respectively, no horizontal overflow. Mobile search controls stack and result-cap text wraps. Missing avatar/optional data and escaped markup covered in component tests. This is basic visual/keyboard coverage, not an assistive-technology audit.
+- **Clean-copy gate passed:** with explicit approval, copied source files only to `D:\RepoFinder-QA-20260923` (no node_modules/bin/obj). Node 24.12.0, npm 11.6.2, .NET SDK 10.0.204. Fresh D-local npm/NuGet caches; `npm ci` installed 471 packages, `dotnet restore` succeeded. All 84 server and 42 client tests passed again in that copy. Production build passed: 550.16 kB raw / 122.10 kB estimated transfer, same warning budget. This is a clean source/dependency installation on the existing machine, not a fresh OS image. One PowerShell process stack-overflowed before test results; the sequential retry without a shell profile passed.
+- Clean-copy browser flow passed on isolated ports 5081/4201: login, Enter search `repo:riki-m/Hilan-Test`, bookmark card, refresh showing 1 saved, new same-account login showing 0 saved. Signed out and stopped only the test processes afterward. The test-only proxy/ports and installed artifacts are outside the real checkout and excluded from publication.
+- Scope check: a new, unrelated `client/tsconfig.app.json` edit appeared during final verification. It is preserved locally and excluded from this commit; the clean-copy tests used the HEAD version of that file. All other client/server source files matched the clean copy by SHA-256.
+- Release gate: all material checks completed before commit preparation. Existing origin/main verified and fetched with zero divergence from the opening HEAD. The final response records the resulting commit/push verification; no force push or email.
+
+## Historical checks
+
 ## Bookmarks bonus — 2026-09-23
 
 Implemented the separate Search/Bookmarks tabs and shared full repository cards. Removed the standalone search counter. No server source, storage contract or dependency manifest changed. These checks cover the bonus implementation; the earlier publication evidence below refers to the previously published baseline.
@@ -21,7 +39,7 @@ Removed the demo account panel and demo wording from the sign-in screen, and rem
 
 Production build passed: 487.82 kB initial raw / 110.68 kB estimated transfer. A fresh browser tab at port 4200 showed blank Username/Password fields, the neutral sign-in instruction and no demo account panel or credentials. No new test suite run was needed for this presentation-only change; the repair test results below predate this follow-up.
 
-## Current repair verification — 2026-09-23
+## Historical repair verification — 2026-09-23
 
 The current source includes bookmark snapshot race protection and deduplication, bounded recovery from shrinking result totals, logout warning cleanup, differentiated upstream failures, and malformed-page validation before session storage. Comments explain these behavioral invariants. The unused Angular router dependency was removed from package.json and package-lock.json.
 

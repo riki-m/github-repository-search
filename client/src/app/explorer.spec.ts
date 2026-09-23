@@ -35,7 +35,7 @@ describe('Explorer', () => {
     http.expectOne('/api/bookmarks').flush([]);
     return fixture;
   }
-  it('uses submitted scope in help and removes the repeated limit notice after showing it', () => {
+  it('uses submitted scope in help and keeps the navigation limit discoverable after showing it', () => {
     const fixture = setup();
     const c = fixture.componentInstance;
     TestBed.inject(AuthService).session.set({
@@ -52,8 +52,78 @@ describe('Explorer', () => {
       .flush({ items: [], totalCount: 2000, incompleteResults: false });
     expect(openDialog.mock.calls[0][1].data).toEqual({ nameOnly: true });
     fixture.detectChanges();
-    expect(fixture.nativeElement.textContent).not.toContain('First 1,000 matches available');
+    expect(fixture.nativeElement.textContent).toContain(
+      'Only the first 1,000 matches are accessible',
+    );
     expect(fixture.nativeElement.textContent).toContain('Showing');
+  });
+  it.each([0, 1, 30, 31, 999, 1000, 1001])(
+    'keeps range, pages and cards aligned for %i matches',
+    (total) => {
+      const fixture = setup();
+      const c = fixture.componentInstance;
+      c.query = 'boundary';
+      c.search();
+      const items = (count: number) =>
+        Array.from({ length: count }, (_, i) => ({ ...example, id: i + 1 }));
+      http
+        .expectOne('/api/repositories?q=boundary&page=1&ranking=best-match')
+        .flush({ items: items(Math.min(total, 30)), totalCount: total, incompleteResults: total === 31 });
+      expect(c.pageCount()).toBe(Math.ceil(Math.min(total, 1000) / 30));
+      if (c.pageCount() > 1) {
+        c.goToPage(c.pageCount());
+        const count = Math.min(total, 1000) - (c.pageCount() - 1) * 30;
+        http
+          .expectOne(`/api/repositories?q=boundary&page=${c.pageCount()}&ranking=best-match`)
+          .flush({ items: items(count), totalCount: total, incompleteResults: total === 31 });
+        expect(c.results().length).toBe(count);
+      }
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelectorAll('.repository-card').length).toBe(
+        c.results().length,
+      );
+      expect(fixture.nativeElement.textContent.includes('Partial results returned.')).toBe(total === 31);
+    const end = Math.min(total, 1000);
+      const start = total ? (c.page() - 1) * 30 + 1 : 0;
+      expect(fixture.nativeElement.querySelector('.result-summary').textContent).toContain(
+        `Showing ${start}–${end}`,
+      );
+    },
+  );
+  it('labels retained results during a request and after failure', () => {
+    const fixture = setup();
+    const c = fixture.componentInstance;
+    c.query = 'old';
+    c.search();
+    http
+      .expectOne('/api/repositories?q=old&page=1&ranking=best-match')
+      .flush({ items: [example], totalCount: 1, incompleteResults: false });
+    c.query = 'new';
+    c.search();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Previous successful results');
+    http
+      .expectOne('/api/repositories?q=new&page=1&ranking=best-match')
+      .flush({}, { status: 502, statusText: 'Unavailable' });
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Previous successful results');
+    expect(c.submittedQuery()).toBe('old');
+    expect(c.results()).toEqual([example]);
+  });
+  it('explains the additional activity filters only when selected', async () => {
+    const fixture = setup();
+    await fixture.whenStable();
+    const select = fixture.nativeElement.querySelector('select');
+    select.value = 'inspiration';
+    select.dispatchEvent(new Event('change'));
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('excluding archived repositories');
+    select.value = 'best-match';
+    select.dispatchEvent(new Event('change'));
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).not.toContain('excluding archived repositories');
   });
   it('opens help once after a broad successful search, not on errors, small results or later requests', () => {
     const c = setup().componentInstance;

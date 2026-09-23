@@ -1,0 +1,50 @@
+<article class="repository-card">
+  <div class="repo-top">
+    @if (repo().owner.avatar_url && failedAvatar() !== repo().owner.avatar_url) {
+      <img
+        [src]="repo().owner.avatar_url"
+        (error)="failedAvatar.set(repo().owner.avatar_url)"
+        [alt]="repo().owner.login + ' avatar'"
+        width="42"
+        height="42"
+        loading="lazy"
+        referrerpolicy="no-referrer"
+      />
+    } @else {
+      <span class="avatar-fallback" aria-hidden="true">{{
+        repo().owner.login.slice(0, 1).toUpperCase()
+      }}</span>
+    }
+    <span>{{ repo().owner.login }}</span>
+  </div>
+  <h3>
+    <a [href]="repo().html_url" target="_blank" rel="noopener noreferrer"
+      >{{ repo().name }} <span aria-hidden="true">↗</span></a
+    >
+  </h3>
+  <p class="repo-description">{{ repo().description || 'No description provided.' }}</p>
+  <div class="repo-meta">
+    <span><span class="language-dot"></span>{{ repo().language || 'Repository' }}</span
+    ><span>☆ {{ repo().stargazers_count | number }} stars</span>
+    <span>{{ repo().forks_count ?? 0 | number }} forks</span>
+  </div>
+  <p class="muted">
+    Last push:
+    {{ repo().pushed_at ? (repo().pushed_at | date: 'mediumDate' : 'UTC') : 'Not available' }}
+    @if (repo().archived) {
+      <strong> · Archived</strong>
+    }
+  </p>
+  @if (showSave()) {
+    <button
+      mat-stroked-button
+      type="button"
+      [disabled]="saved() || saving()"
+      (click)="save.emit(repo())"
+    >
+      {{ saved() ? '✓ Bookmarked' : saving() ? 'Saving…' : '+ Bookmark' }}
+    </button>
+  } @else {
+    <span class="saved-marker">✓ Saved to your collection</span>
+  }
+</article>

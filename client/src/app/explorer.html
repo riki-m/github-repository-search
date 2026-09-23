@@ -41,6 +41,12 @@
           Repository name only
         </label>
       </form>
+      @if (ranking === 'inspiration') {
+        <p class="muted">
+          Popular &amp; active: most stars first, excluding archived repositories and those without
+          a push in the past year. Stars do not measure code quality.
+        </p>
+      }
       <div class="results-bar">
         <h2>Search results</h2>
       </div>
@@ -50,7 +56,10 @@
       @if (error()) {
         <p class="error" role="alert">{{ error() }}</p>
       }
-      @if (searched() && !loading()) {
+      @if (searched()) {
+        @if (loading() || error()) {
+          <p class="muted">Previous successful results remain below until a new search succeeds.</p>
+        }
         <p class="result-summary" role="status">
           Showing {{ results().length ? (page() - 1) * 30 + 1 : 0 }}–{{
             results().length ? (page() - 1) * 30 + results().length : 0
@@ -60,10 +69,12 @@
           @if (submittedNameOnly()) {
             · Name only
           }
+          <!-- The one-time dialog must not hide GitHub's permanent navigation limit. -->
+          @if (total() > 1000) {
+            · Only the first 1,000 matches are accessible. Narrow your search for more specific
+            results.
+          }
         </p>
-        @if (total() > 1000 && !auth.searchHelpSeen()) {
-          <p class="muted">First 1,000 matches available.</p>
-        }
         @if (incomplete()) {
           <p class="muted">Partial results returned.</p>
         }

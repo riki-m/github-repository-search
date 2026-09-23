@@ -8,7 +8,14 @@ A GitHub repository search application built with Angular 21, Angular Material a
 
 Prerequisites: .NET 10 SDK, Node.js 24 LTS (24.12.0 was used), npm and Internet access to GitHub and package registries.
 
-From the repository root, start the API:
+Download the project first:
+
+```sh
+git clone https://github.com/riki-m/github-repository-search.git
+cd github-repository-search
+```
+
+From that repository root, start the API:
 
 ```sh
 dotnet restore RepositorySearch.sln
@@ -155,12 +162,12 @@ Building tests does not update an already running API process. Restart it when r
 6. Restart the API. The previous token can no longer access the protected API; sign in again.
 7. Search for HILAN using the single search row: keyword, Sort results, Search. On the first search with more than 30 matches, dismiss the one-time guidance popup. Confirm it does not repeat on further searches or refresh in the same login. Move to Next and Previous: the page number, result range and repositories change together.
 8. Edit the search text without submitting, then click Next. Results must still belong to the previously submitted query. Submit the edited text: successful results start at page 1.
-9. Search for a broad term with more than 1,000 matches. Last opens page 34 (up to 10 results); Next is disabled. The 1,000-match limit is explained in the one-time popup; its repeated inline notice stays hidden after that popup has been shown. A failed request must preserve the previous page and allow retry after the displayed rate-limit guidance.
+9. Search for a broad term with more than 1,000 matches. Last opens page 34 (up to 10 results); Next is disabled. The 1,000-match limit is explained in the one-time popup and remains in the result summary after closing it. A failed request must preserve the previous page and allow retry after the displayed rate-limit guidance.
 10. Bookmark an item on a later page, return to it and verify the saved state. Repeat navigation at narrow/mobile width and using the keyboard.
 
 ## One-time search guidance
 
-The first successful page-1 search with more than 30 matches opens a short Material popup headed Make your search more specific. It explains that more than 30 matches span multiple pages and recommends adding specific words or more of the repository name (user authentication instead of user). This refinement advice appears in both broad and name-only modes; it does not promise an exact match. Paging and the 1,000-result limit remain secondary guidance. The suggestion to select Repository name only appears only when that submitted search did not already use name-only scope. Once the popup has been shown, the repeated inline First 1,000 matches available notice is hidden for that login, including after refresh; the result range/count and applied search settings remain visible. Close it with Got it, Escape or the backdrop. It does not auto-dismiss; Material manages focus containment and restoration.
+The first successful page-1 search with more than 30 matches opens a short Material popup headed Make your search more specific. It explains that more than 30 matches span multiple pages and recommends adding specific words or more of the repository name (user authentication instead of user). This refinement advice appears in both broad and name-only modes; it does not promise an exact match. Paging and the 1,000-result limit remain secondary guidance. The suggestion to select Repository name only appears only when that submitted search did not already use name-only scope. The popup appears once per login. When more than 1,000 matches exist, the result summary always retains the accessible limit and a short refinement hint, including after the popup is closed or the tab is refreshed. No separate repeated notice is added. Close it with Got it, Escape or the backdrop. It does not auto-dismiss; Material manages focus containment and restoration.
 
 The UI stores only a boolean flag in sessionStorage for the current tab/login, never query text. Subsequent searches, page navigation and refreshes in that login do not reopen the popup. A successful new login resets the flag; logout/session cleanup removes it. Failed requests and searches with 30 or fewer matches do not consume the opportunity. This restores guidance without interrupting every search; it supersedes the earlier decision to remove the dialog entirely.
 
@@ -207,7 +214,7 @@ Desktop and narrow-viewport visual checks, browser search/paging checks and auto
 
 **How to search:** Enter a keyword, choose a ranking (see below), and submit using Search or Enter. For a broad search, browse with First, Previous, Next or Last. To narrow the search, use `HILAN-TEST in:name` (name field), `HILAN user:riki-m` (owner), or `repo:riki-m/Hilan-Test` (specific repository). Name matching is not guaranteed to be exact. Our demo login does not sign you into GitHub; requests remain anonymous and return public repositories.
 
-**Request and state behavior:** The client sends `q`, `page` and `ranking`; the API trims outer query whitespace, applies the chosen preset, and URL-encodes the effective query. Every click fetches only the selected page using `per_page=30`; no automatic prefetch, new cache or personal token was added. Navigation uses the last submitted query and ranking, even if the controls have unsent edits. A new search starts at page 1. Pending searches are cancelled when replaced; page/results/ranking update together only after success. On failure, the previous successful results/page remain visible with an error so navigation can be retried. Controls are disabled while loading. Bookmark state remains shared across pages within the existing session.
+**Request and state behavior:** The client sends `q`, `page` and `ranking`; the API trims outer query whitespace, applies the chosen preset, and URL-encodes the effective query. Every click fetches only the selected page using `per_page=30`; no automatic prefetch, new cache or personal token was added. Navigation uses the last submitted query and ranking, even if the controls have unsent edits. A new search starts at page 1. Pending searches are cancelled when replaced; page/results/ranking update together only after success. While loading or after a failure, the previous successful results/page remain explicitly labelled, so they cannot be mistaken for new results. Errors remain separate from empty successful searches. Controls are disabled while loading. Bookmark state remains shared across pages within the existing session.
 
 **Limits:** GitHub exposes at most 1,000 results per search: up to 34 pages at this page size, with at most 10 items on the final page. The API rejects invalid page values with HTTP 400; it does not turn upstream failures into empty successful results. The UI caps navigation and explains the limit when total_count exceeds 1,000. Refine the query to reach more specific matches. `incomplete_results` still produces a separate partial-results notice. Live rankings are not a frozen snapshot, so duplicates or omissions can occur between calls as GitHub data changes. Every page request consumes the existing local and GitHub rate limits; wait and retry after a rate-limit error. Existing session expiry and bounded recent-result storage are unchanged.
 
@@ -215,7 +222,7 @@ Reference: [GitHub search limits, ranking and pagination](https://docs.github.co
 
 ## Finding inspiration: three distinct ranking choices
 
-The original five options were reduced to three after a UX review: Most starred used the same star ordering as Popular & active without its activity filters; Most forked was a separate but secondary community-interest measure. Neither was an identical algorithm, but both added overlapping choices. Their standalone API modes have been removed and are rejected with HTTP 400. Fork counts remain useful visible repository data. The explanation dialog component, imports, mocks, description helpers and panel styles were deleted.
+The original five options were reduced to three after a UX review: Most starred used the same star ordering as Popular & active without its activity filters; Most forked was a separate but secondary community-interest measure. Neither was an identical algorithm, but both added overlapping choices. Their standalone API modes have been removed and are rejected with HTTP 400. Fork counts remain useful visible repository data. The earlier ranking-explanation dialog was removed; the separate one-time search-guidance dialog remains.
 
 This is a user-requested enhancement beyond the original assignment's basic search requirement. The goal is to surface popular, recently active matching repositories while keeping the ranking understandable and reversible.
 
@@ -229,7 +236,7 @@ The 365-day activity window is an application choice, not a GitHub endorsement o
 
 The server uses a fixed allowlist of rankings. Sorting/filtering happens in GitHub **before pagination**, across the matching search set, not just within 30 already-downloaded items. This preserves meaningful page ordering without downloading hundreds of repositories, making per-repository enrichment calls or adding a crawler/database. Each page still costs one search request and remains subject to the existing request limits and 1,000-result cap.
 
-The keyword, Material-styled native sort selector and Search button share one form and align on desktop; on narrow screens they stack in that same order. No explanatory panels are shown; a short guidance dialog appears once per login as described below. The selector describes pending settings; the result summary describes the settings that actually produced the visible results. Press Search to apply a selection and restart at page 1. Cards display lifetime stars, forks, last push date (UTC) and archive status so the evidence is visible.
+The keyword, Material-styled native sort selector and Search button share one form and align on desktop; on narrow screens they stack in that same order. Selecting Popular & active shows a short explanation of its archive/activity restrictions and the limits of stars as a quality signal. A short guidance dialog appears once per login as described above. The selector describes pending settings; the result summary describes the settings that actually produced the visible results. Press Search to apply a selection and restart at page 1. Cards display lifetime stars, forks, last push date (UTC) and archive status so the evidence is visible.
 
 **What this does not claim:** Stars measure community interest; forks count copies, not positive reviews. Recent pushes do not prove good code, security or suitability. GitHub's public repository search does not expose search-frequency statistics, review ratings, traffic rankings or a code-quality score. Repository traffic endpoints require elevated repository permissions and cannot provide an anonymous global popularity ranking. We do not relabel watchers/stars as views, infer recent star growth from lifetime totals, invent an AI quality score, or call any repository the best on GitHub. Inspect its README, tests, maintenance and licensing before adopting it.
 
@@ -241,3 +248,26 @@ Sources: [Search API ranking](https://docs.github.com/en/rest/search/search#sear
 - [ASP.NET Core JWT validation](https://learn.microsoft.com/en-us/aspnet/core/security/authentication/configure-jwt-bearer-authentication?view=aspnetcore-10.0)
 - [GitHub repository search](https://docs.github.com/en/rest/search/search#search-repositories)
 - [GitHub rate limits](https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api)
+
+## Troubleshooting and current verification
+
+- **Cannot reach the server:** keep both terminals running and check API 5080 and client 4200. Opening only the frontend cannot supply authentication or search.
+- **Port in use:** first check whether the existing application already works. Do not terminate a process or restart the API just to run tests; that would invalidate its sessions. Use the isolated test-output command above.
+- **401:** sign in again. Expiry, logout or a server restart invalidates the previous session.
+- **429:** wait before retrying. Both local protection and anonymous GitHub search limits apply; repeated clicks will not increase the quota.
+- **400 for qualifiers:** remove the conflicting `in:` qualifier when selecting name-only, or choose Default for manual `archived:`/`pushed:` filters.
+- **Dependency installation fails:** check free disk space, supported Node/.NET versions and registry access. Do not disable TLS certificate validation to work around a corporate proxy.
+- **Missing avatar:** the owner's initial replaces a missing/broken image; the readable owner name remains.
+- **Tests in VS Code:** run the `Unit tests (Vitest)` task from the client workspace. The obsolete Karma port-9876 debugger has been removed.
+
+See [QA_REPORT.md](QA_REPORT.md) for the current requirement matrix, findings, verified coverage and remaining gates. [VERIFICATION.md](VERIFICATION.md) distinguishes current evidence from historical checks. Live results are timestamped observations, not permanent expected rankings.
+
+To repeat the optional live comparison from the repository root (PowerShell 7, API already running):
+
+```powershell
+./scripts/Verify-LiveSearch.ps1 -Group identity -OutputPath live-search-identity.json
+# Wait at least a minute before the next group to respect anonymous GitHub search limits.
+./scripts/Verify-LiveSearch.ps1 -Group ranking -OutputPath live-search-ranking.json
+```
+
+This creates and revokes its own test login. It never prints or saves the temporary JWT. Successful comparisons include ordered IDs and displayed fields; failures retain status codes and must not be interpreted as zero matches.

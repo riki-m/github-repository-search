@@ -44,6 +44,7 @@ public sealed class SessionCleanup(SessionStore sessions) : BackgroundService
 }
 public sealed class UserSession(string id, string userId, DateTimeOffset expiresAt)
 {
+    // One lock makes duplicate checks, capacity checks and inserts atomic for parallel saves.
     private readonly object gate = new();
     private readonly Dictionary<long, JsonElement> recentResults = new();
     private readonly Dictionary<long, JsonElement> bookmarks = new();
