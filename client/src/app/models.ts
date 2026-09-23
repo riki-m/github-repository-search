@@ -6,6 +6,9 @@ export interface Repository {
   description: string | null;
   language: string | null;
   stargazers_count: number;
+  forks_count?: number;
+  pushed_at?: string | null;
+  archived?: boolean;
   owner: { login: string; avatar_url: string };
 }
 export interface SearchResponse {

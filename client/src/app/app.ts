@@ -1,6 +1,7 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, effect, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import { AuthService, errorMessage } from './auth.service';
+import { AuthService } from './auth.service';
+import { finalize } from 'rxjs';
 import { Login } from './login';
 import { Explorer } from './explorer';
 @Component({
@@ -12,13 +13,30 @@ import { Explorer } from './explorer';
 export class App {
   readonly auth = inject(AuthService);
   readonly error = signal('');
-  signOut() {
-    this.auth.logout().subscribe({
-      next: () => {
-        this.auth.clear();
-        this.error.set('');
-      },
-      error: (error) => this.error.set(errorMessage(error)),
+  readonly signingOut = signal(false);
+  constructor() {
+    // A successful new login ends the lifetime of the previous logout warning.
+    effect(() => {
+      if (this.auth.session()) this.error.set('');
     });
+  }
+  signOut() {
+    if (this.signingOut()) return;
+    this.signingOut.set(true);
+    this.error.set('');
+    this.auth
+      .logout()
+      .pipe(
+        finalize(() => {
+          this.auth.clear();
+          this.signingOut.set(false);
+        }),
+      )
+      .subscribe({
+        error: () =>
+          this.error.set(
+            'Signed out on this device. Server sign-out could not be confirmed; the session may remain active until it expires.',
+          ),
+      });
   }
 }

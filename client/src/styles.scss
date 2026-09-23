@@ -155,17 +155,6 @@ h2 {
 .login-panel > button {
   height: 48px;
 }
-.demo-accounts {
-  background: #f3f6f8;
-  border-radius: 10px;
-  margin-top: 24px;
-  padding: 16px;
-  font-size: 13px;
-}
-.demo-accounts p {
-  margin: 10px 0 0;
-  color: #465b70;
-}
 .fine-print {
   color: var(--muted);
   font-size: 12px;
@@ -192,17 +181,35 @@ h2 {
 }
 .search-form {
   display: flex;
+  flex-wrap: wrap;
   gap: 14px;
-  max-width: 820px;
-  margin-bottom: 46px;
+  max-width: 1100px;
+  margin-bottom: 30px;
 }
 .search-form mat-form-field {
+  min-width: 0;
   flex: 1;
   background: white;
+}
+.search-form .ranking-field {
+  flex: 0 0 230px;
 }
 .search-form button {
   height: 56px;
   padding: 0 28px;
+}
+.name-only-option {
+  flex-basis: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  cursor: pointer;
+  input {
+    width: 18px;
+    height: 18px;
+    accent-color: #146b61;
+  }
 }
 .results-bar {
   display: flex;
@@ -316,6 +323,17 @@ footer {
   color: var(--muted);
   font-size: 12px;
 }
+.pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 20px 0;
+}
+.repo-meta {
+  flex-wrap: wrap;
+}
 @media (max-width: 950px) {
   .login-layout {
     gap: 35px;
@@ -353,6 +371,9 @@ footer {
   }
   .repository-grid {
     grid-template-columns: 1fr;
+  }
+  .search-form .ranking-field {
+    flex: auto;
   }
   .search-form {
     flex-direction: column;

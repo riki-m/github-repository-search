@@ -43,6 +43,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
     };
 });
 builder.Services.AddAuthorization();
+builder.Services.AddRequestPolicies(builder.Configuration);
 builder.Services.AddHttpClient<IGitHubSearch, GitHubSearch>(client =>
 {
     client.BaseAddress = new Uri("https://api.github.com/");
@@ -50,11 +51,27 @@ builder.Services.AddHttpClient<IGitHubSearch, GitHubSearch>(client =>
     client.DefaultRequestHeaders.Accept.ParseAdd("application/vnd.github+json");
     client.DefaultRequestHeaders.Add("X-GitHub-Api-Version", "2022-11-28");
     client.Timeout = TimeSpan.FromSeconds(15);
-});
+}).RemoveAllLoggers();
 var app = builder.Build();
 app.UseExceptionHandler();
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path.StartsWithSegments("/api"))
+    {
+        // Cover successful, rejected and error responses, without logging credentials or search text.
+        context.Response.OnStarting(() =>
+        {
+            context.Response.Headers.CacheControl = "no-store";
+            context.Response.Headers.Pragma = "no-cache";
+            return Task.CompletedTask;
+        });
+    }
+    await next(context);
+});
+app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 app.MapControllers();
 app.Run();
 public partial class Program;

@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using RepositorySearch.Api.Services;
 
 namespace RepositorySearch.Api.Controllers;
@@ -8,7 +9,7 @@ namespace RepositorySearch.Api.Controllers;
 [ApiController, Route("api/auth")]
 public sealed class AuthController(DemoUsers users, SessionStore sessions, TokenService tokens) : ControllerBase
 {
-    [HttpPost("login")]
+    [HttpPost("login"), EnableRateLimiting(RequestPolicies.Login)]
     public IActionResult Login(LoginRequest request)
     {
         if (!users.Validate(request.Username, request.Password))

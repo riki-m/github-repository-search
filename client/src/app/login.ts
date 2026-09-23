@@ -27,7 +27,7 @@ import { AuthService, errorMessage } from './auth.service';
     <form class="login-panel" (ngSubmit)="signIn()">
       <span class="eyebrow">WELCOME TO REPO FINDER</span>
       <h2>Sign in to explore</h2>
-      <p class="muted">Use a demo account to start your session.</p>
+      <p class="muted">Enter your username and password to continue.</p>
       <mat-form-field appearance="outline"
         ><mat-label>Username</mat-label>
         <input
@@ -57,11 +57,7 @@ import { AuthService, errorMessage } from './auth.service';
       <button mat-flat-button type="submit" [disabled]="busy() || !username.trim() || !password">
         {{ busy() ? 'Signing in…' : 'Sign in →' }}
       </button>
-      <div class="demo-accounts">
-        <strong>Demo accounts</strong>
-        <p><code>demo1</code> / <code>Demo1!Pass</code></p>
-        <p><code>demo2</code> / <code>Demo2!Pass</code></p>
-      </div>
+      <!-- Evaluation credentials are documented in README, not displayed on the sign-in screen. -->
       <p class="fine-print">
         Bookmarks last for this session. A new sign-in starts a fresh collection.
       </p>

@@ -12,6 +12,6 @@ Content-Type: application/json
 GET {{host}}/api/repositories?q=angular
 Authorization: Bearer {{token}}
 
-### Read the full saved objects.
+### Read presentation summaries; full objects stay in the server session.
 GET {{host}}/api/bookmarks
 Authorization: Bearer {{token}}

@@ -5,6 +5,26 @@ namespace RepositorySearch.Tests;
 
 public sealed class GitHubTests
 {
+    [Theory]
+    [InlineData("updated")]
+    public async Task Sort_applies_upstream_to_the_requested_page(string ranking)
+    {
+        var handler = new StubHandler(HttpStatusCode.OK, """{"total_count":0,"incomplete_results":false,"items":[]}""");
+        var service = new GitHubSearch(new HttpClient(handler) { BaseAddress = new("https://api.github.com/") });
+        await service.Search("angular", default, 2, ranking);
+        Assert.Equal($"https://api.github.com/search/repositories?q=angular&per_page=30&page=2&sort={ranking}&order=desc", handler.Uri!.AbsoluteUri);
+    }
+    [Fact]
+    public async Task Later_page_preserves_query_and_enforces_search_result_limit()
+    {
+        var items = string.Join(",", Enumerable.Range(1, 30).Select(id => $"{{\"id\":{id}}}"));
+        var handler = new StubHandler(HttpStatusCode.OK, $"{{\"total_count\":2000,\"incomplete_results\":false,\"items\":[{items}]}}");
+        var service = new GitHubSearch(new HttpClient(handler) { BaseAddress = new("https://api.github.com/") });
+        var result = await service.Search("HILAN-TEST in:name", default, 34);
+        Assert.Equal("https://api.github.com/search/repositories?q=HILAN-TEST%20in%3Aname&per_page=30&page=34", handler.Uri!.AbsoluteUri);
+        Assert.Equal(10, result.Items.Length);
+        Assert.Equal(2000, result.TotalCount);
+    }
     [Fact]
     public async Task Query_is_encoded_and_full_json_is_retained()
     {
@@ -15,7 +35,7 @@ public sealed class GitHubTests
         Assert.True(Assert.Single(result.Items).GetProperty("extra").GetProperty("retained").GetBoolean());
     }
     [Theory]
-    [InlineData(HttpStatusCode.Forbidden, 429)]
+    [InlineData(HttpStatusCode.Forbidden, 502)]
     [InlineData(HttpStatusCode.TooManyRequests, 429)]
     [InlineData(HttpStatusCode.InternalServerError, 502)]
     [InlineData(HttpStatusCode.UnprocessableEntity, 400)]
@@ -24,6 +44,30 @@ public sealed class GitHubTests
         var service = new GitHubSearch(new HttpClient(new StubHandler(upstream, "{}")) { BaseAddress = new("https://api.github.com/") });
         var error = await Assert.ThrowsAsync<GitHubException>(() => service.Search("test", default));
         Assert.Equal(expected, error.StatusCode);
+    }
+
+    [Theory]
+    [InlineData("{}")]
+    [InlineData("{\"total_count\":\"wrong\",\"incomplete_results\":false,\"items\":[]}")]
+    [InlineData("{\"total_count\":-1,\"incomplete_results\":false,\"items\":[]}")]
+    [InlineData("{\"total_count\":0,\"incomplete_results\":false,\"items\":{}}")]
+    public async Task Invalid_response_schema_is_a_controlled_upstream_failure(string body)
+    {
+        var service = new GitHubSearch(new HttpClient(new StubHandler(HttpStatusCode.OK, body)) { BaseAddress = new("https://api.github.com/") });
+        var error = await Assert.ThrowsAsync<GitHubException>(() => service.Search("test", default));
+        Assert.Equal(502, error.StatusCode);
+    }
+    [Theory]
+    [InlineData("{\"message\":\"API rate limit exceeded\"}", true)]
+    [InlineData("{\"message\":\"You have exceeded a secondary rate limit\"}", true)]
+    [InlineData("{\"message\":\"Resource not accessible\"}", false)]
+    [InlineData("not-json", false)]
+    public async Task Forbidden_response_is_not_always_throttling(string body, bool limited)
+    {
+        var service = new GitHubSearch(new HttpClient(new StubHandler(HttpStatusCode.Forbidden, body)) { BaseAddress = new("https://api.github.com/") });
+        var error = await Assert.ThrowsAsync<GitHubException>(() => service.Search("test", default));
+        Assert.Equal(limited ? 429 : 502, error.StatusCode);
+        Assert.DoesNotContain(body, error.Message);
     }
     private sealed class StubHandler(HttpStatusCode status, string body) : HttpMessageHandler
     {

@@ -1,6 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
-import { catchError, tap, throwError } from 'rxjs';
+import { catchError, tap, throwError, timeout } from 'rxjs';
 import { LoginResponse } from './models';
 
 @Injectable({ providedIn: 'root' })
@@ -8,18 +8,33 @@ export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly stored = this.restore();
   readonly session = signal<LoginResponse | null>(this.stored);
+  private readonly helpSeen = signal(
+    !!this.stored && sessionStorage.getItem('repository-search-help-seen') === 'true',
+  );
+  readonly searchHelpSeen = this.helpSeen.asReadonly();
+  // A UI-only flag follows this tab's login lifetime, including refreshes. No query is stored.
+  claimSearchHelp(): boolean {
+    if (!this.session() || this.helpSeen()) return false;
+    sessionStorage.setItem('repository-search-help-seen', 'true');
+    this.helpSeen.set(true);
+    return true;
+  }
   login(username: string, password: string) {
     return this.http.post<LoginResponse>('/api/auth/login', { username, password }).pipe(
       tap((session) => {
+        sessionStorage.removeItem('repository-search-help-seen');
+        this.helpSeen.set(false);
         sessionStorage.setItem('repository-search-session', JSON.stringify(session));
         this.session.set(session);
       }),
     );
   }
   logout() {
-    return this.http.post<void>('/api/auth/logout', {});
+    return this.http.post<void>('/api/auth/logout', {}).pipe(timeout(5000));
   }
   clear() {
+    this.helpSeen.set(false);
+    sessionStorage.removeItem('repository-search-help-seen');
     sessionStorage.removeItem('repository-search-session');
     this.session.set(null);
   }
