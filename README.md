@@ -95,6 +95,10 @@ Use **Search** to discover repositories and select **Bookmark**. Once the server
 - These are single-process limits for the local demo, not distributed DDoS protection. The Angular development proxy shares its source IP between local users; forwarded headers are not trusted automatically.
 - Existing demo-only authentication, sessionStorage, one-hour sessions and local HTTP remain unchanged. HTTPS and a separate authentication/privacy review are required before external deployment.
 
+## Quality assurance documentation
+
+See [docs/qa](docs/qa/README.md) for the QA report, verification history and timestamped live-search evidence. These files support review and are not required to run the application. The repeatable comparison tool is in `scripts/`.
+
 ## Structure
 
 ```text
@@ -142,7 +146,7 @@ npm test -- --watch=false
 npm run build
 ```
 
-See [VERIFICATION.md](VERIFICATION.md) for executed checks and remaining limits.
+See [VERIFICATION.md](docs/qa/VERIFICATION.md) for executed checks and remaining limits.
 
 On Windows, a running API can lock its build output. To test without stopping it or resetting sessions, use a separate output directory:
 
@@ -260,14 +264,14 @@ Sources: [Search API ranking](https://docs.github.com/en/rest/search/search#sear
 - **Missing avatar:** the owner's initial replaces a missing/broken image; the readable owner name remains.
 - **Tests in VS Code:** run the `Unit tests (Vitest)` task from the client workspace. The obsolete Karma port-9876 debugger has been removed.
 
-See [QA_REPORT.md](QA_REPORT.md) for the current requirement matrix, findings, verified coverage and remaining gates. [VERIFICATION.md](VERIFICATION.md) distinguishes current evidence from historical checks. Live results are timestamped observations, not permanent expected rankings.
+See [QA_REPORT.md](docs/qa/QA_REPORT.md) for the current requirement matrix, findings, verified coverage and remaining gates. [VERIFICATION.md](docs/qa/VERIFICATION.md) distinguishes current evidence from historical checks. Live results are timestamped observations, not permanent expected rankings.
 
 To repeat the optional live comparison from the repository root (PowerShell 7, API already running):
 
 ```powershell
-./scripts/Verify-LiveSearch.ps1 -Group identity -OutputPath live-search-identity.json
+./scripts/Verify-LiveSearch.ps1 -Group identity -OutputPath docs/qa/evidence/live-search-identity.json
 # Wait at least a minute before the next group to respect anonymous GitHub search limits.
-./scripts/Verify-LiveSearch.ps1 -Group ranking -OutputPath live-search-ranking.json
+./scripts/Verify-LiveSearch.ps1 -Group ranking -OutputPath docs/qa/evidence/live-search-ranking.json
 ```
 
 This creates and revokes its own test login. It never prints or saves the temporary JWT. Successful comparisons include ordered IDs and displayed fields; failures retain status codes and must not be interpreted as zero matches.

@@ -1,7 +1,7 @@
 param(
     [string]$ApiBase = 'http://127.0.0.1:5080',
     [ValidateSet('identity','ranking')][string]$Group = 'identity',
-    [string]$OutputPath = 'live-search-evidence.json'
+    [string]$OutputPath = (Join-Path $PSScriptRoot '../docs/qa/evidence/live-search-evidence.json')
 )
 $ErrorActionPreference = 'Stop'
 # Public evaluation fixtures only. Keep the temporary JWT in memory and revoke this test session.
