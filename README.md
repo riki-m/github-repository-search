@@ -82,6 +82,8 @@ Use **Search** to discover repositories and select **Bookmark**. Once the server
 
 ## Session behavior and decisions
 
+**Why in-process memory instead of Redis?** The assignment requires a custom server-side session, but does not require multiple application instances or session continuity across server restarts. We therefore use an in-memory `SessionStore` registered as a singleton, with a concurrent session dictionary and locks protecting compound operations. This supports concurrent requests within one server process without requiring the evaluator to run an additional service. Session data is temporary and is lost on server restart; this is an explicit limitation. Redis would be worth considering if sessions needed to be shared across application instances or survive application restarts, alongside appropriate JWT signing-key management and concurrency controls. Switching session storage alone would not make bookmarks persist across new logins; that would require a separate change to the data lifecycle.
+
 - Each successful login creates a new, independent session lasting one hour (absolute expiry).
 - JWT contains the user ID and session ID. Signature, algorithm, issuer, audience, lifetime and active-session ownership are validated.
 - The JWT is kept in sessionStorage for same-tab refresh continuity, never in a URL. JavaScript access to storage is a demo tradeoff; production authentication needs a separate threat-model review.
