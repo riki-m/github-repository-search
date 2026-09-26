@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Repository, SearchResponse } from './models';
+import { Repository, SearchResponse } from '../models';
 @Injectable({ providedIn: 'root' })
 export class RepositoryService {
   private readonly http = inject(HttpClient);

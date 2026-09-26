@@ -24,10 +24,10 @@
 | חובה: Angular 21 ומעלה | `client/package.json`, lockfile | Angular 21.2; בדיקות ובניית Production | תקין |
 | חובה: .NET 10 | `server/RepositorySearch.Api/RepositorySearch.Api.csproj` | net10.0; בנייה ו־84 בדיקות | תקין |
 | חובה: Material או Bootstrap | רכיבי Angular Material בטפסים, לשוניות וחלונית | בנייה, בדיקות רכיבים ודפדפן | תקין |
-| חובה: כפתור ו־Enter | `client/src/app/explorer.html`, `explorer.ts` | חיפוש HILAN ב־Enter ו־USER בכפתור | תקין |
+| חובה: כפתור ו־Enter | `client/src/app/explorer/explorer.html`, `explorer/explorer.ts` | חיפוש HILAN ב־Enter ו־USER בכפתור | תקין |
 | חובה: GitHub דרך השרת | `Controllers/RepositoriesController.cs`, `Services/GitHubSearch.cs` | שש השוואות חיות; בדיקות כתובות וקידוד | תקין |
 | חובה: גלריה, שם, תמונת בעלים, Bookmark | `repository-card.ts`, `repository-card.html` | דפדפן ובדיקות משותפות לשתי הלשוניות | תקין |
-| חובה: JWT | `Program.cs`, `Authentication.cs`, `auth.service.ts` | חסר/פג/לא תקין, בעלות סשן, התנתקות והגבלת העברת הטוקן ל־API המקומי | תקין בכיסוי המתועד |
+| חובה: JWT | `Program.cs`, `Authentication.cs`, `auth/auth.service.ts` | חסר/פג/לא תקין, בעלות סשן, התנתקות והגבלת העברת הטוקן ל־API המקומי | תקין בכיסוי המתועד |
 | חובה: Custom Session | `Services/SessionStore.cs` | תפוגה, בידוד משתמשים/כניסות, קיבולת ונעילה | תקין |
 | חובה: אובייקט GitHub מלא בסשן | `Remember`, `Bookmark`, `ApiTests.cs` | JSON מקונן ושדות שאינם נשלחים לגלריה נשמרים | תקין |
 | חובה: README והרצה | `README.md` | פקודות, שני מסופים, פורטים, משתמשים, Session ותקלות נבדקו מול הקוד | התקנה והרצה מעותק נקי עברו |

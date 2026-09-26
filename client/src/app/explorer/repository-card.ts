@@ -1,7 +1,7 @@
 import { Component, input, output, signal } from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
-import { Repository } from './models';
+import { Repository } from '../models';
 
 // Both tabs use the same presentation contract; saving remains owned by the session workspace.
 @Component({

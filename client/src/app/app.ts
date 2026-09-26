@@ -1,9 +1,9 @@
 import { Component, effect, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import { AuthService } from './auth.service';
+import { AuthService } from './auth/auth.service';
 import { finalize } from 'rxjs';
-import { Login } from './login';
-import { Explorer } from './explorer';
+import { Login } from './auth/login';
+import { Explorer } from './explorer/explorer';
 @Component({
   selector: 'app-root',
   imports: [MatButtonModule, Login, Explorer],

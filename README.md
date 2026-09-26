@@ -113,12 +113,22 @@ See [docs/qa](docs/qa/README.md) for the QA report, verification history and tim
 
 ```text
 client/src/app/
-  auth.service.ts        Login state and scoped JWT interceptor
-  repository.service.ts  API calls
-  login.ts               Login form
-  explorer.ts/html       Search state, tabs and bookmark synchronization
-  bookmarks.ts           Collection loading/error/empty states
-  repository-card.ts     Shared repository card
+  app.ts/html/config.ts   Application shell and configuration
+  app.spec.ts            Application integration tests
+  models.ts              Shared API response types
+  auth/
+    auth.service.ts      Login state and scoped JWT interceptor
+    auth.spec.ts         Authentication tests
+    login.ts             Login form
+  explorer/
+    explorer.ts/html     Search state, tabs and bookmark synchronization
+    explorer.spec.ts     Search, paging and bookmark tests
+    repository.service.ts  Repository API calls
+    bookmarks.ts         Collection loading/error/empty states
+    repository-card.ts/html  Shared repository card
+    repository-card.spec.ts  Card tests
+    search-help.ts       Search guidance dialog
+    search-help.spec.ts  Guidance dialog tests
 server/
   RepositorySearch.Api/
     Contracts/           Minimal gallery response models

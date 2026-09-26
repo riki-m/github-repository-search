@@ -1,7 +1,7 @@
 import { Component, input, output } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { Repository } from './models';
+import { Repository } from '../models';
 import { RepositoryCard } from './repository-card';
 
 @Component({

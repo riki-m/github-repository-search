@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { App } from './app';
-import { AuthService, authInterceptor } from './auth.service';
+import { AuthService, authInterceptor } from './auth/auth.service';
 
 describe('Sign out privacy', () => {
   let http: HttpTestingController;

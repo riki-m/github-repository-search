@@ -1,5 +1,14 @@
 # Verification
 
+## Client folder organization — 2026-09-26
+
+- Moved authentication files into `client/src/app/auth/` and search/bookmark files into `client/src/app/explorer/`. Tests and templates remain beside their components; shared API types remain in `app/models.ts`.
+- Compared all 18 application source files against HEAD with the expected path substitutions: no logic/template changes, missing files, duplicate old copies or empty application directories.
+- All **42 frontend tests passed**, across all 5 test files, using `npm test -- --watch=false` in the actual checkout.
+- Production build passed using `npm run build -- --configuration production`: **550.16 kB raw / 122.10 kB estimated transfer**. The existing 500 kB budget warning remains unchanged.
+- Initial sandboxed build/test attempts were blocked by filesystem read permissions; both passed when rerun with the required access.
+- README structure and QA implementation paths were updated; `git diff --check` passed. Server code, application behavior and dependencies were not changed. Backend tests and live browser checks were not rerun for this file-move-only change.
+
 ## Final published source validation — 2026-09-23
 
 - Validated source revision: `0c77d89d11dffbe82026a63155506f81dc76f37e`, including QA fixes from `9ec5def`. The only intervening code/configuration change is explicit `rootDir: "./src"` in `client/tsconfig.app.json`.

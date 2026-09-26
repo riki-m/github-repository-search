@@ -2,12 +2,12 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { Explorer } from './explorer';
-import { AuthService } from './auth.service';
+import { AuthService } from '../auth/auth.service';
 import { MatDialog } from '@angular/material/dialog';
 import { vi } from 'vitest';
 import { By } from '@angular/platform-browser';
 import { Bookmarks } from './bookmarks';
-import { Repository } from './models';
+import { Repository } from '../models';
 
 describe('Explorer', () => {
   let http: HttpTestingController;

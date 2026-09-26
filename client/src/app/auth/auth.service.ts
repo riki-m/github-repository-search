@@ -1,7 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { catchError, tap, throwError, timeout } from 'rxjs';
-import { LoginResponse } from './models';
+import { LoginResponse } from '../models';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
